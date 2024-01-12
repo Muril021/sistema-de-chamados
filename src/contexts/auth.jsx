@@ -12,6 +12,7 @@ export const AuthContext = createContext({});
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loadingAuth, setLoadingAuth] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const navigate = useNavigate();
 
@@ -21,7 +22,10 @@ const AuthProvider = ({ children }) => {
 
       if (storageData) {
         setUser(JSON.parse(storageData));
+        setLoading(false);
       }
+
+      setLoading(false);
     }
 
     loadUser();
@@ -106,7 +110,8 @@ const AuthProvider = ({ children }) => {
         signIn,
         signUp,
         logout,
-        loadingAuth
+        loadingAuth,
+        loading
       }}
     >
       {children}
