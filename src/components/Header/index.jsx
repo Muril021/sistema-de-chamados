@@ -19,7 +19,7 @@ const Header = () => {
       </div>
       <Link to='/dashboard'>
         <FiHome color='#FFF' size={24} />
-        Início
+        Chamados
       </Link>
       <Link to='/customers'>
         <FiUser color='#FFF' size={24} />

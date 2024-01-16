@@ -1,4 +1,5 @@
 .sidebar {
+  width: 200px;
   margin: 0;
   padding: 0;
   background-color: #181c2e;
@@ -38,4 +39,24 @@
 
 .sidebar a svg {
   margin-right: 0.5rem;
+}
+
+@media screen and (max-width: 700px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+
+  .sidebar a {
+    float: left;
+  }
+
+  .sidebar a svg {
+    display: none;
+  }
+
+  .sidebar div {
+    display: none;
+  }
 }
