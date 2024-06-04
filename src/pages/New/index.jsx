@@ -3,10 +3,11 @@ import Header from '../../components/Header';
 import Title from '../../components/Title';
 import { FiPlusCircle } from 'react-icons/fi'
 import { AuthContext } from '../../contexts/auth';
-import { collection, getDocs } from 'firebase/firestore';
+import { addDoc, collection, getDocs } from 'firebase/firestore';
 import { db } from '../../services/firebaseConnection';
 
 import './new.css';
+import { toast } from 'react-toastify';
 
 const New = () => {
   const { user } = useContext(AuthContext);
@@ -64,6 +65,30 @@ const New = () => {
     setCustomerSelected(e.target.value);
   }
 
+  const handleRegister = async (e) => {
+    e.preventDefault();
+
+    await addDoc(collection(db, 'tickets'), {
+      created: new Date(),
+      cliente: customers[customerSelected].nomeFantasia,
+      clienteId: customers[customerSelected].id,
+      assunto: assunto,
+      complemento: complemento,
+      status: status,
+      userId: user.uid
+    })
+    .then(() => {
+      toast.success('Chamado registrado!');
+      setComplemento('');
+      setAssunto('Suporte');
+      setCustomerSelected(0);
+    })
+    .catch((error) => {
+      toast.error('Ops! Erro ao registrar.');
+      console.log(error);
+    })
+  }
+
   return (
     <div>
       <Header />
@@ -73,7 +98,7 @@ const New = () => {
         </Title>
 
         <div className="container">
-          <form className="form-profile">
+          <form className="form-profile" onSubmit={handleRegister}>
             <label>Clientes</label>
             {loadCustomer ? (
               <input type="text" disabled={true} value='Carregando...' />
