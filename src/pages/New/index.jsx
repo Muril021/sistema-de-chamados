@@ -23,7 +23,7 @@ const New = () => {
 
   useEffect(() => {
     const loadCustomers = async () => {
-      const querySnapshot = await getDocs(listRef)
+      await getDocs(listRef)
       .then((snapshot) => {
         let lista = [];
 
