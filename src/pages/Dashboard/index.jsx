@@ -8,7 +8,7 @@ import { FiPlus, FiMessageSquare, FiSearch, FiEdit2 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 
 import "./dashboard.css";
-import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore";
 import { db } from "../../services/firebaseConnection";
 import { format } from "date-fns";
 
@@ -18,6 +18,8 @@ const Dashboard = () => {
   const [chamados, setChamados] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEmpty, setIsEmpty] = useState(false);
+  const [lastDocs, setLastDocs] = useState();
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const listRef = collection(db, 'tickets');
 
@@ -61,10 +63,31 @@ const Dashboard = () => {
         })
       })
 
-      setChamados([...lista]);
+      const lastDoc = querySnapshot.docs[
+        querySnapshot.docs.length - 1
+      ]; // pegando o último item
+
+      setChamados(chamados => [...chamados, ...lista]);
+      setLastDocs(lastDoc);
     } else {
       setIsEmpty(true);
     }
+
+    setLoadingMore(false);
+  }
+
+  const handleMore = async () => {
+    setLoadingMore(true);
+
+    const q = query(
+      listRef,
+      orderBy('created', 'desc'),
+      startAfter(lastDocs),
+      limit(5)
+    );
+
+    const querySnapshot = await getDocs(q);
+    await updateState(querySnapshot);
   }
 
   if (loading) {
@@ -122,16 +145,30 @@ const Dashboard = () => {
                         <td data-label="Cliente">{chamado.cliente}</td>
                         <td data-label="Assunto">{chamado.assunto}</td>
                         <td data-label="Status">
-                          <span className="badge" style={{ backgroundColor: '#999' }}>
+                          <span
+                            className="badge"
+                            style={{
+                              backgroundColor: chamado.status === 'Aberto' ?
+                              '#5CB85C' : '#999'
+                            }}
+                          >
                             {chamado.status}
                           </span>
                         </td>
-                        <td data-label="Cadastrado">{chamado.createdFormat}</td>
+                        <td data-label="Cadastrado">
+                          {chamado.createdFormat}
+                        </td>
                         <td data-label="#">
-                          <button className="action" style={{ backgroundColor: '#3586f6' }}>
+                          <button
+                            className="action"
+                            style={{ backgroundColor: '#3586f6' }}
+                          >
                             <FiSearch color="#FFF" size={17} />
                           </button>
-                          <button className="action" style={{ backgroundColor: '#f6a935' }}>
+                          <button
+                            className="action"
+                            style={{ backgroundColor: '#f6a935' }}
+                          >
                             <FiEdit2 color="#FFF" size={17} />
                           </button>
                         </td>
@@ -140,6 +177,19 @@ const Dashboard = () => {
                   })}
                 </tbody>
               </table>
+              {
+                loadingMore &&
+                <h3 style={{ marginTop: '0.8em' }}>
+                  Buscando mais chamados...
+                </h3>
+              }
+              {
+                !loadingMore &&
+                !isEmpty &&
+                <button className="btn-more" onClick={handleMore}>
+                  Mais
+                </button>
+              }
             </>
           )}
         </>
