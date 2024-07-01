@@ -3,14 +3,24 @@ import Header from '../../components/Header';
 import Title from '../../components/Title';
 import { FiPlusCircle } from 'react-icons/fi'
 import { AuthContext } from '../../contexts/auth';
-import { addDoc, collection, getDocs } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc
+} from 'firebase/firestore';
 import { db } from '../../services/firebaseConnection';
 
 import './new.css';
 import { toast } from 'react-toastify';
+import { useNavigate, useParams } from 'react-router-dom';
 
 const New = () => {
   const { user } = useContext(AuthContext);
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   const [customers, setCustomers] = useState([]);
   const [loadCustomer, setLoadCustomer] = useState(true);
@@ -18,6 +28,7 @@ const New = () => {
   const [complemento, setComplemento] = useState('');
   const [assunto, setAssunto] = useState('Suporte');
   const [status, setStatus] = useState('Aberto');
+  const [idCustomer, setIdCustomer] = useState(false);
 
   const listRef = collection(db, 'customers');
 
@@ -42,6 +53,10 @@ const New = () => {
 
         setCustomers(lista);
         setLoadCustomer(false);
+
+        if (id) {
+          loadId(lista);
+        }
       })
       .catch((error) => {
         console.log('Erro ao buscar os clientes', error);
@@ -51,7 +66,27 @@ const New = () => {
     }
 
     loadCustomers();
-  }, [])
+  }, [id])
+
+  const loadId = async (lista) => {
+    const docRef = doc(db, 'tickets', id);
+    await getDoc(docRef)
+    .then((snapshot) => {
+      setAssunto(snapshot.data().assunto);
+      setStatus(snapshot.data().status);
+      setComplemento(snapshot.data().complemento);
+
+      let index = lista.findIndex(
+        item => item.id === snapshot.data().clienteId
+      );
+      setCustomerSelected(index);
+      setIdCustomer(true);
+    })
+    .catch((error) => {
+      console.log(error);
+      setIdCustomer(false);
+    })
+  }
 
   const handleOptionChange = (e) => {
     setStatus(e.target.value);
@@ -67,6 +102,29 @@ const New = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+
+    if (idCustomer) {
+      const docRef = doc(db, 'tickets', id);
+      await updateDoc(docRef, {
+        cliente: customers[customerSelected].nomeFantasia,
+        clienteId: customers[customerSelected].id,
+        assunto: assunto,
+        complemento: complemento,
+        status: status,
+        userId: user.uid
+      })
+      .then(() => {
+        toast.success('Chamado atualizado!');
+        setCustomerSelected(0);
+        setComplemento('');
+        navigate('/dashboard');
+      })
+      .catch(() => {
+        toast.error('Ops! Erro ao atualizar.');
+      })
+
+      return;
+    }
 
     await addDoc(collection(db, 'tickets'), {
       created: new Date(),
@@ -93,7 +151,7 @@ const New = () => {
     <div>
       <Header />
       <div className="content">
-        <Title name="Novo chamado">
+        <Title name={id ? "Editando chamado" : "Novo chamado"}>
           <FiPlusCircle size={25} />
         </Title>
 
@@ -103,7 +161,10 @@ const New = () => {
             {loadCustomer ? (
               <input type="text" disabled={true} value='Carregando...' />
             ) : (
-              <select value={customerSelected} onChange={handleChangeCustomer}>
+              <select
+                value={customerSelected}
+                onChange={handleChangeCustomer}
+              >
                 {customers.map((customer, index) => {
                   return (
                     <option key={index} value={index}>

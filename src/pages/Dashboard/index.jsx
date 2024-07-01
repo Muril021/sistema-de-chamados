@@ -1,16 +1,16 @@
 import { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { AuthContext } from "../../contexts/auth";
 
 import Header from "../../components/Header";
 import Title from "../../components/Title";
 import { FiPlus, FiMessageSquare, FiSearch, FiEdit2 } from "react-icons/fi";
 
-import { Link } from "react-router-dom";
-
-import "./dashboard.css";
 import { collection, getDocs, limit, orderBy, query, startAfter } from "firebase/firestore";
 import { db } from "../../services/firebaseConnection";
 import { format } from "date-fns";
+
+import "./dashboard.css";
 
 const Dashboard = () => {
   const { logout } = useContext(AuthContext);
@@ -165,12 +165,13 @@ const Dashboard = () => {
                           >
                             <FiSearch color="#FFF" size={17} />
                           </button>
-                          <button
+                          <Link
+                            to={`/new/${chamado.id}`}
                             className="action"
                             style={{ backgroundColor: '#f6a935' }}
                           >
                             <FiEdit2 color="#FFF" size={17} />
-                          </button>
+                          </Link>
                         </td>
                       </tr>
                     )
